@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Solver — Puzzle Assistant</title>
+  <meta name="description" content="A 5-letter word puzzle solver built with React." />
+
+  <!-- Tailwind via Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800&family=JetBrains+Mono:wght@600;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- React + ReactDOM + Babel (standalone, for in-browser JSX) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    html, body { font-family: 'Fraunces', Georgia, serif; background: #f5f5f4; }
+    .tile-font { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-type="module">
+    const { useState, useMemo, useEffect } = React;
+
+    // ---------- Inline SVG Icons ----------
+    const Icon = ({ path, size = 16, className = '' }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size}
+        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+        className={className}>
+        {path}
+      </svg>
+    );
+    const RotateCcw = (p) => <Icon {...p} path={<>
+      <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>
+    </>} />;
+    const Sparkles = (p) => <Icon {...p} path={<>
+      <path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"/>
+      <path d="M19 14l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>
+      <path d="M5 18l.5 1.2 1.2.5-1.2.5L5 21.4l-.5-1.2-1.2-.5 1.2-.5z"/>
+    </>} />;
+    const Info = (p) => <Icon {...p} path={<>
+      <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+    </>} />;
+
+    // ---------- Word List ----------
+    const WORD_STRING = `about above abuse actor acute admit adopt adult after again agent agree ahead alarm album alert alike alive allow alone along alter among anger angle angry apart apple apply arena argue arise armed array arrow aside asset audio audit avoid award aware awful bacon badge badly baker bases basic basis beach began begin begun being below bench berry bible bills birth black blade blame blank blast blaze bleed blend bless blind block blood bloom blown blues blunt board boast bonus boost booth bound brain brake brand brass brave bread break breed brick bride brief bring broad broke brown brush bucket build built bunch burst buyer cabin cable calif cameo camel candy canoe cards cargo carry carve catch cause cease chain chair chaos charm chart chase cheap cheat check chest chief child chill chips choir chose chunk civic civil claim clean clear clerk click cliff climb cling clock clone close cloth cloud clown clubs clues coach coast could count court cover craft crack craft crane crash crazy cream creek crest crime crisp cross crowd crown crude cruel crush crust curse curve cycle daily dairy dance dated dealt death debit debts decay decks decor delay delta dense depth derby devil diary dirty dozen draft drain drama drank drawn dread dream dress dried drift drill drink drive drone drops drove drown drugs drunk dryer dusty dwell dying eager early earth easel eaten eater edges eight elbow elder elect elite email embed empty ender enemy enjoy enter entry equal erase error erupt ethic event every evict exact exams excel exert exile exist extra facts faint fairs fairy faith false fancy fatal fated fault favor feast feels fence ferry fetch fewer fiber field fiery fifth fifty fight final finds finer fired firms first fishy fixed fixer flame flank flare flash flask fleet flesh flick flies fling float flock flood floor flora flour flows fluid flush focus foggy force forge forms forth forty forum found frame frank fraud freed fresh fried frogs front frost fruit fuels fully funds funny gains games gamma gates gauge genes genre germs ghost giant gifts girls given gives glade glass gleam glide globe gloom glory glove going gonna goods grace grade grail grain grand grant grape graph grasp grass grate grave gravy great greed green greet grief grill grind grins gripe gross group grove growl grown guard guess guest guide guild guilt gulch gypsy habit hairs half handy happy harsh hatch haunt haven haves heads heard heart heats heavy hedge hello hence hotel hound house hover human humor hurry icons ideal idiom idols image imply impse incur index inept infer inner input issue items ivory jelly jewel joins joint jokes judge juice juicy junks kayak kebab keeps kicks kidney kings kiosk kites knead kneel knees knelt knife knock knots known koala labor lacks laden lakes lance lands lanes lapse large laser later latex latte laugh layer leads leafy leaks leans leaps learn lease least leave ledge lefty legal lemon lemur level lever liars libel light liked lilac limbs limit limps linen lined linen links lions lists lithe lived liver lives loads loaf lobby local lodge loft logic login logos longs loops loose lords loser loses louse lover lower loyal lucky lunar lunch lungs lurid lures lurks lying macho macro madam made magic major maker males malls mamma mango maple march marks marry marsh match mates maths matte mauve maxim maybe mayor meals means meant medal media medic melon melts merry metal meter metro might minor minus mixed mixer modal model modem moist molar money month moral motor motto mount mourn mouse mouth moved mover movie mowed muddy mulch mummy mural music musky mussy mutes myths named nasal nasty naval needs neigh nerve never newer newly nicer niche niece night ninja ninth nobody noble noise nomad noose north nosed notch noted notes novel nurse oasis ocean odder oddly offer often older olive onion opera opted orbit order organ other ought ouija ounce outer owing owner oxide pacts paddy pager pains paint pairs paler palms panda panel panic pants paper parks parse party pasta paste patch patsy pause peace peach peaks pearl peers pence penny perch peril perky pesky petal petty phase phone photo piano picks piece piers piety piggy piles pilot pinch pined pines pinky pinto pious pious pipes piped piper pitch pithy pixie pizza place plaid plain plane plank plant plate plays plaza plead pleat pled plies plots plows pluck plugs plumb plume plump plural plush poach poems point poise poker polar poles polls ponds pools poppy porch pores porky posed poses posit posse posts pouch pound pouts power prank prawn press price pride pried prime print prior prism prize probe prompt prone prong proof props prose proud prove prune psalm pubic pudgy pulled pulls pulpy pulse puma pumps punch punks pupil puppy puree purer purge purse pushy pussy puttee puzzle quack quaff quail quake qualm quark quart quash quasi queen queer quell query quest queue quick quiet quill quilt quint quirk quite quote quoth radar radii radio rails rainy raise rally ranch range ranks rants rapid rarer raspy ratio ratty raven reach react ready realm reams rears rebel redid reeds reedy refer reign rekey relax relay relic remit renal reply reset resin rests retry reuse rhino rhyme ribs rider ridge rifle right rigid rigor rinse ripen riper riser rises risks risky rival river roast robin robot rocks rocky rogue roles rolls roofs rooms roost roots ropes rosea roses rotor rouge rough round route rover rowdy rower royal ruder rugby ruined ruled ruler ruins ruled rules rural sabre saddled saddle sadly safer sails saint salad salon salsa salty salve salvo sandy satin satyr sauce sauna saved saves savor scale scalp scaly scamp scans scant scape scare scarf scary scene scent scoff scold scoop scope score scorn scotch scour scout scowl scram scrap scream screen screws script scrub scrum scuba seals seams seats sedan seeds seedy seeks seize semis sends sense serve setup seven sever sewer shack shade shady shaft shake shaky shale shall shame shank shape share shark sharp shave shawl shear sheen sheep sheer sheet shelf shell shift shine shiny ships shire shirt shock shoes shone shook shoot shops shore short shorn shots shove shown shows shrub shrug shunt sibyl sides siege sight sigma silky silly since sinew singe sinks sired siren sites sixth sixty sized sizes skate skews skids skier skies skiff skill skimp skins skirt skull skunk slack slain slant slash slate slave sleek sleep sleet slept slice slick slide slime slimy sling slips slits slope slope slops slosh sloth slows slung slurp slush small smart smash smear smell smelt smile smirk smite smith smock smoke smoky smote snack snail snake snare snarl sneak sneer sniff snipe snoop snore snort snout snowy snuck snuff soaps soapy soared sober sobs socks sodas softy solar solid solos solve sonar songs sonic sorry sorts souls sound soups soupy south sowed space spade spank spare spark spars spats spawn speak spear speck speed spell spelt spend spent sperm spice spicy spied spike spiky spills spilt spine spiny spire spite splat split spoil spoke spoken spoon sport spots spout spray spree sprig spunk spurn spurs squad squat squib stack staff stage stain stair stake stale stalk stall stamp stand stank stare stark start stash state stats stave stays stead steal steam steed steel steep steer stems stern stick stiff still sting stink stint stir stock stoic stoke stole stomp stone stood stool stoop stops store stork storm story stout stove strap straw stray strip strum stubs stuck study stuff stump stung stunk stunt style styli suave sugar suing suite sulky sully sumac sunny super surer surge surly sushi swain swamp swans swarm swear sweat sweep sweet swell swept swift swill swim swine swing swirl swish swoon swoop sword swore sworn swung synod syrup table taboo tacit tacks tacky tails taint taken takes taker tales talks tally talon tamer tango tanks tapas taper tapir tardy tarot taste tasty tatty tawny taxed taxis teach teams tears tease techs teddy teens teeth tells tempo tempt tench tenet tense tenth tepee tepid terms terra terse tests texts thank thaws theft their theme there these thick thief thigh thing think third thong thorn those three threw throb throw thrum thumb thump thyme tiara tidal tides tiger tight tilde tiles timed times timid tin tinge tints tipsy tired tires titan title toads toady toast today token tolls tombs tonal tones tonic tooth topaz topic torch torpor torso torus total totem touch tough towel tower towns toxic toxin toyed trace track tract trade trail train trait tramp trans traps trash trawl trays tread treat treks trend tress tribe trick tried tries trill tripe trips troll troop trope trout truce truck truer truly trump trunk truss trust truth tubal tubes tucks tuition tulip tulle tumid tummy tumor tuner tunes tunic turbo turfs turks turns tusks tutor tutus twain tweak tweed tweet twice twigs twine twins twirl twist tying typal types typos udder ulcer ultra umbra unarm unbar uncap unary uncle uncut under undid undue unfed unfit unfix unify union unite units unity unjam unlit unmet unpin unsay unset unsex untie until unwed unzip upper upset urban urged urges urine usage users using usual usurp usury vacua vague vain valet valid value valve vamps vapor vault vaunt veery vegan veils veins velar velum vends vents venue verbs verge verse verso verve vials vicar video views vigil vigor villa vines vinyl viola viols viper viral virus visas visit visor vista vital vitae vivid vixen vocal voice voids volts vomit voted voter votes vouch vowed vowel voyeur waded wader wades wafer waged wager wages wagon waist waits waive waked waken wakes waled wales walks walls walnut waltz wands waned wanes wanly wants warms warns warps warts washy waste watch water watts waved waver waves waxed waxen waxes weary weave wedge weeds weeks weeps weigh weird welds wells welsh welts wench wends whack whale wharf whats wheat wheel whelk whelm whelp where which whiff while whims whine whiny whips whirl whirr whisk white whole whoop whore whose wider width wield wife wight wilds wiles wills wilts wimp wince winch winds windy wined wines wings winks winos wiped wiper wipes wired wirer wires wiser wises wisps wispy witch withe witty wives wizen woken wolds wolves woman womb woods woody wooed wools woolly words wordy works world worms wormy worry worse worst worth would wound woven wowed wrack wraps wrath wreak wreck wrens wrest wring wrist write writs wrong wrote wroth wrung wryly yacht yanks yards yarns yawls yawns yawny yeahs yearn years yeast yells yelps yikes yield yodel yoked yokel yokes yolks yolky young yours youth yowls yucky yummy zebra zebus zeros zests zesty zingy zombi zonal zoned zones zooms`;
+
+    const WORDS = [...new Set(WORD_STRING.split(/\s+/).filter(w => w.length === 5))];
+
+    // ---------- Solver Logic ----------
+    function matchesConstraints(word, guesses) {
+      for (const { letters, colors } of guesses) {
+        if (letters.some(l => !l)) continue;
+
+        for (let i = 0; i < 5; i++) {
+          const letter = letters[i].toLowerCase();
+          const color = colors[i];
+          if (color === 'green' && word[i] !== letter) return false;
+          if (color === 'yellow' && word[i] === letter) return false;
+          if (color === 'gray' && word[i] === letter) return false;
+        }
+
+        const requiredCounts = {};
+        for (let i = 0; i < 5; i++) {
+          const letter = letters[i].toLowerCase();
+          if (colors[i] === 'green' || colors[i] === 'yellow') {
+            requiredCounts[letter] = (requiredCounts[letter] || 0) + 1;
+          }
+        }
+
+        const caps = {};
+        for (let i = 0; i < 5; i++) {
+          const letter = letters[i].toLowerCase();
+          if (colors[i] === 'gray') caps[letter] = requiredCounts[letter] || 0;
+        }
+
+        const wordCounts = {};
+        for (const c of word) wordCounts[c] = (wordCounts[c] || 0) + 1;
+
+        for (const [l, c] of Object.entries(requiredCounts)) {
+          if ((wordCounts[l] || 0) < c) return false;
+        }
+        for (const [l, cap] of Object.entries(caps)) {
+          if ((wordCounts[l] || 0) > cap) return false;
+        }
+      }
+      return true;
+    }
+
+    function scoreWord(word, pool) {
+      const freq = {};
+      for (const w of pool) {
+        const seen = new Set();
+        for (const c of w) {
+          if (!seen.has(c)) { freq[c] = (freq[c] || 0) + 1; seen.add(c); }
+        }
+      }
+      const seen = new Set();
+      let score = 0;
+      for (const c of word) {
+        if (!seen.has(c)) { score += freq[c] || 0; seen.add(c); }
+      }
+      return score;
+    }
+
+    const COLOR_CYCLE = { gray: 'yellow', yellow: 'green', green: 'gray' };
+
+    const tileColor = (color, hasLetter) => {
+      if (!hasLetter) return 'bg-stone-50 border-stone-300 text-stone-800';
+      if (color === 'green') return 'bg-emerald-700 border-emerald-800 text-stone-50';
+      if (color === 'yellow') return 'bg-amber-500 border-amber-600 text-stone-900';
+      return 'bg-stone-400 border-stone-500 text-stone-50';
+    };
+
+    // ---------- Main Component ----------
+    function WordleSolver() {
+      const [guesses, setGuesses] = useState(
+        Array.from({ length: 6 }, () => ({
+          letters: ['', '', '', '', ''],
+          colors: ['gray', 'gray', 'gray', 'gray', 'gray'],
+        }))
+      );
+      const [activeRow, setActiveRow] = useState(0);
+      const [activeCol, setActiveCol] = useState(0);
+
+      useEffect(() => {
+        const handler = (e) => {
+          const tag = document.activeElement?.tagName;
+          if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+          if (/^[a-zA-Z]$/.test(e.key)) {
+            setGuesses((gs) => {
+              const copy = gs.map((r) => ({ letters: [...r.letters], colors: [...r.colors] }));
+              copy[activeRow].letters[activeCol] = e.key.toUpperCase();
+              return copy;
+            });
+            if (activeCol < 4) setActiveCol(activeCol + 1);
+          } else if (e.key === 'Backspace') {
+            setGuesses((gs) => {
+              const copy = gs.map((r) => ({ letters: [...r.letters], colors: [...r.colors] }));
+              if (copy[activeRow].letters[activeCol]) {
+                copy[activeRow].letters[activeCol] = '';
+              } else if (activeCol > 0) {
+                copy[activeRow].letters[activeCol - 1] = '';
+                setActiveCol(activeCol - 1);
+              }
+              return copy;
+            });
+          } else if (e.key === 'Enter') {
+            if (activeRow < 5) { setActiveRow(activeRow + 1); setActiveCol(0); }
+          } else if (e.key === 'ArrowLeft' && activeCol > 0) setActiveCol(activeCol - 1);
+          else if (e.key === 'ArrowRight' && activeCol < 4) setActiveCol(activeCol + 1);
+          else if (e.key === 'ArrowUp' && activeRow > 0) setActiveRow(activeRow - 1);
+          else if (e.key === 'ArrowDown' && activeRow < 5) setActiveRow(activeRow + 1);
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+      }, [activeRow, activeCol]);
+
+      const cycleColor = (rowIdx, colIdx) => {
+        setGuesses((gs) => {
+          const copy = gs.map((r) => ({ letters: [...r.letters], colors: [...r.colors] }));
+          if (!copy[rowIdx].letters[colIdx]) return copy;
+          copy[rowIdx].colors[colIdx] = COLOR_CYCLE[copy[rowIdx].colors[colIdx]];
+          return copy;
+        });
+      };
+
+      const focusTile = (rowIdx, colIdx) => { setActiveRow(rowIdx); setActiveCol(colIdx); };
+
+      const reset = () => {
+        setGuesses(Array.from({ length: 6 }, () => ({
+          letters: ['', '', '', '', ''],
+          colors: ['gray', 'gray', 'gray', 'gray', 'gray'],
+        })));
+        setActiveRow(0); setActiveCol(0);
+      };
+
+      const remaining = useMemo(
+        () => WORDS.filter((w) => matchesConstraints(w, guesses)),
+        [guesses]
+      );
+
+      const suggestions = useMemo(() => {
+        if (remaining.length === 0) return [];
+        const scored = remaining.map((w) => ({ word: w, score: scoreWord(w, remaining) }));
+        scored.sort((a, b) => b.score - a.score);
+        return scored.slice(0, 8);
+      }, [remaining]);
+
+      const hasAnyInput = guesses.some((r) => r.letters.some((l) => l));
+
+      const today = new Date().toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+
+      return (
+        <div className="min-h-screen bg-stone-100 p-6">
+          <div className="max-w-5xl mx-auto">
+            {/* Header */}
+            <div className="border-b-2 border-stone-800 pb-4 mb-8">
+              <div className="flex items-baseline justify-between flex-wrap gap-2">
+                <div>
+                  <div className="text-xs tracking-[0.3em] text-stone-500 uppercase mb-1">Puzzle Assistant</div>
+                  <h1 className="text-5xl font-extrabold text-stone-900 tracking-tight italic">The Solver</h1>
+                </div>
+                <div className="text-right text-xs tracking-widest text-stone-500 uppercase">{today}</div>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-[auto_1fr] gap-10">
+              {/* Left: Grid */}
+              <div>
+                <div className="inline-block">
+                  {guesses.map((row, rowIdx) => (
+                    <div key={rowIdx} className="flex gap-2 mb-2">
+                      {row.letters.map((letter, colIdx) => {
+                        const isActive = rowIdx === activeRow && colIdx === activeCol;
+                        const color = row.colors[colIdx];
+                        return (
+                          <button
+                            key={colIdx}
+                            onClick={() => {
+                              if (isActive && letter) cycleColor(rowIdx, colIdx);
+                              else focusTile(rowIdx, colIdx);
+                            }}
+                            className={`tile-font w-14 h-14 md:w-16 md:h-16 text-2xl md:text-3xl font-extrabold border-2 transition-all duration-150 ${tileColor(color, !!letter)} ${isActive ? 'ring-4 ring-stone-800 ring-offset-2 ring-offset-stone-100' : ''}`}
+                          >
+                            {letter}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-5 text-xs text-stone-600 max-w-xs leading-relaxed">
+                  <div className="flex items-start gap-2 mb-2">
+                    <Info size={14} className="mt-0.5 flex-shrink-0" />
+                    <span>
+                      Type letters to fill tiles. Click the active tile to cycle color:
+                      <span className="inline-block w-3 h-3 bg-stone-400 mx-1 align-middle" /> gray →
+                      <span className="inline-block w-3 h-3 bg-amber-500 mx-1 align-middle" /> yellow →
+                      <span className="inline-block w-3 h-3 bg-emerald-700 mx-1 align-middle" /> green.
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={reset}
+                  className="mt-5 inline-flex items-center gap-2 px-4 py-2 border-2 border-stone-800 text-stone-800 hover:bg-stone-800 hover:text-stone-50 transition-colors text-sm tracking-wider uppercase"
+                >
+                  <RotateCcw size={14} /> Reset Board
+                </button>
+              </div>
+
+              {/* Right: Suggestions */}
+              <div>
+                <div className="border-t-4 border-stone-800 pt-4">
+                  <div className="flex items-baseline justify-between mb-4">
+                    <h2 className="text-2xl font-bold text-stone-900">Recommended Guesses</h2>
+                    <div className="text-xs tracking-widest text-stone-500 uppercase">
+                      {remaining.length} {remaining.length === 1 ? 'match' : 'matches'} left
+                    </div>
+                  </div>
+
+                  {!hasAnyInput && (
+                    <div className="bg-stone-50 border border-stone-300 p-6 text-stone-700 leading-relaxed">
+                      <Sparkles size={18} className="mb-2 text-amber-600" />
+                      <div className="font-semibold mb-1">Start with a strong opener.</div>
+                      <div className="text-sm">
+                        Words like <span className="tile-font font-bold">CRANE</span>,{' '}
+                        <span className="tile-font font-bold">SLATE</span>, or{' '}
+                        <span className="tile-font font-bold">CRATE</span> cover high-frequency letters in common positions.
+                        Enter your guess above, then tap each tile to mark feedback from the puzzle.
+                      </div>
+                    </div>
+                  )}
+
+                  {hasAnyInput && suggestions.length === 0 && (
+                    <div className="bg-red-50 border border-red-300 p-4 text-red-900 text-sm">
+                      No matching words found. Double-check the tile colors — a mismatch may have eliminated every candidate.
+                    </div>
+                  )}
+
+                  {hasAnyInput && suggestions.length > 0 && (
+                    <div className="space-y-2">
+                      {suggestions.map((s, i) => {
+                        const maxScore = suggestions[0].score || 1;
+                        const pct = (s.score / maxScore) * 100;
+                        return (
+                          <div key={s.word} className="flex items-center gap-4 py-2 border-b border-stone-300">
+                            <div className="text-stone-400 text-sm w-6 tabular-nums">{String(i + 1).padStart(2, '0')}</div>
+                            <div className="tile-font text-xl font-extrabold text-stone-900 w-24 tracking-wider">
+                              {s.word.toUpperCase()}
+                            </div>
+                            <div className="flex-1 h-2 bg-stone-200 relative">
+                              <div className="absolute inset-y-0 left-0 bg-emerald-700" style={{ width: `${pct}%` }} />
+                            </div>
+                            <div className="text-stone-500 text-xs tabular-nums w-10 text-right">{s.score}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {remaining.length > 0 && remaining.length <= 20 && hasAnyInput && (
+                    <div className="mt-6 pt-4 border-t border-stone-300">
+                      <div className="text-xs tracking-widest text-stone-500 uppercase mb-2">All remaining possibilities</div>
+                      <div className="flex flex-wrap gap-2">
+                        {remaining.map((w) => (
+                          <span key={w} className="tile-font text-sm font-bold text-stone-700 bg-stone-200 px-2 py-1">
+                            {w.toUpperCase()}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-16 pt-6 border-t border-stone-300 text-xs text-stone-500 leading-relaxed max-w-2xl">
+              <div className="font-bold text-stone-700 mb-1 tracking-wider uppercase">About this tool</div>
+              <p>
+                Enter your guesses and their feedback from any 5-letter word puzzle. The solver filters a dictionary of
+                ~1,400 common English words and ranks candidates by letter-frequency entropy — words with common,
+                distinct letters score higher because they cut the remaining search space fastest. Built as a learning
+                exercise in constraint-satisfaction logic.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<WordleSolver />);
+  </script>
+</body>
+</html>
